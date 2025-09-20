@@ -10,7 +10,7 @@
  * - Transfer calculation between players
  * 
  * @author compound0x
- * @version 1.0.0
+ * @version 1.0.1
  * @created September 2025
  */
 
