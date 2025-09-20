@@ -3,8 +3,9 @@
  * 
  * Handles the calculation and display of fair prize distribution based on player scores.
  * Features:
+ * - Dynamic number of players (2-10)
+ * - Configurable minimum score threshold
  * - Proportional distribution based on scores
- * - Minimum score threshold (20 points)
  * - Real-time name updates in results
  * - Transfer calculation between players
  * 
@@ -13,15 +14,64 @@
  * @created September 2025
  */
 
+// Generate player input fields dynamically
+function generatePlayerInputs() {
+    const numPlayers = parseInt(document.getElementById('num-players').value) || 4;
+    const container = document.getElementById('players-container');
+    
+    // Clear existing inputs
+    container.innerHTML = '';
+    
+    // Generate new inputs
+    for (let i = 1; i <= numPlayers; i++) {
+        const playerDiv = document.createElement('div');
+        playerDiv.className = 'player-input';
+        playerDiv.innerHTML = `
+            <label for="player${i}-name">Player ${i} Name:</label>
+            <input type="text" id="player${i}-name" placeholder="Enter name" value="Player ${String.fromCharCode(64 + i)}">
+            
+            <label for="player${i}-score">Score:</label>
+            <input type="number" id="player${i}-score" placeholder="Enter score" min="0" value="0">
+        `;
+        container.appendChild(playerDiv);
+    }
+    
+    // Re-attach event listeners for new inputs
+    attachPlayerEventListeners();
+}
+
 function calculateDistribution() {
     // Clear previous results
     clearResults();
     
-    // Get input values
+    // Get configuration values
+    const numPlayers = parseInt(document.getElementById('num-players').value) || 4;
+    const prizePerPlayer = parseFloat(document.getElementById('prize-per-player').value);
+    const minScore = parseInt(document.getElementById('min-score').value) || 20;
+    
+    if (isNaN(prizePerPlayer) || prizePerPlayer <= 0) {
+        showError('Please enter a valid prize amount');
+        return;
+    }
+    
+    if (isNaN(minScore) || minScore < 0) {
+        showError('Please enter a valid minimum score');
+        return;
+    }
+    
+    // Get player data
     const players = [];
-    for (let i = 1; i <= 4; i++) {
-        const name = document.getElementById(`player${i}-name`).value.trim();
-        const score = parseFloat(document.getElementById(`player${i}-score`).value);
+    for (let i = 1; i <= numPlayers; i++) {
+        const nameInput = document.getElementById(`player${i}-name`);
+        const scoreInput = document.getElementById(`player${i}-score`);
+        
+        if (!nameInput || !scoreInput) {
+            showError(`Player ${i} inputs not found. Please refresh and try again.`);
+            return;
+        }
+        
+        const name = nameInput.value.trim();
+        const score = parseFloat(scoreInput.value);
         
         if (!name) {
             showError(`Please enter a name for Player ${i}`);
@@ -36,23 +86,14 @@ function calculateDistribution() {
         players.push({ name, score, originalPrize: 0, deservedPrize: 0 });
     }
     
-    const prizePerPlayer = parseFloat(document.getElementById('prize-per-player').value);
-    
-    if (isNaN(prizePerPlayer) || prizePerPlayer <= 0) {
-        showError('Please enter a valid prize amount');
-        return;
-    }
-    
     // Calculate distribution
-    const result = calculateFairDistribution(players, prizePerPlayer);
+    const result = calculateFairDistribution(players, prizePerPlayer, minScore);
     
     // Display results
     displayResults(result);
 }
 
-function calculateFairDistribution(players, prizePerPlayer) {
-    const minScore = 20;
-    
+function calculateFairDistribution(players, prizePerPlayer, minScore) {
     // Separate eligible and ineligible players
     const eligiblePlayers = players.filter(player => player.score >= minScore);
     const ineligiblePlayers = players.filter(player => player.score < minScore);
@@ -148,8 +189,9 @@ function displayResults(result) {
     const resultsSection = document.getElementById('results-section');
     resultsSection.style.display = 'block';
     
-    // Store current player names for tracking changes
-    for (let i = 1; i <= 4; i++) {
+    // Store current player names for tracking changes (dynamic number of players)
+    const numPlayers = parseInt(document.getElementById('num-players').value) || 4;
+    for (let i = 1; i <= numPlayers; i++) {
         const nameInput = document.getElementById(`player${i}-name`);
         if (nameInput) {
             nameInput.setAttribute('data-previous-value', nameInput.value.trim() || `Player ${i}`);
@@ -160,11 +202,11 @@ function displayResults(result) {
     displaySummary(result);
     
     // Display eligible players
-    displayEligiblePlayers(result.eligiblePlayers);
+    displayEligiblePlayers(result.eligiblePlayers, result.minScore);
     
     // Display ineligible players (if any)
     if (result.ineligiblePlayers.length > 0) {
-        displayIneligiblePlayers(result.ineligiblePlayers);
+        displayIneligiblePlayers(result.ineligiblePlayers, result.minScore);
     }
     
     // Display distribution table
@@ -187,7 +229,13 @@ function displaySummary(result) {
     `;
 }
 
-function displayEligiblePlayers(players) {
+function displayEligiblePlayers(players, minScore) {
+    // Update title with dynamic minimum score
+    const title = document.getElementById('eligible-players-title');
+    if (title) {
+        title.textContent = `Eligible Players (Score ≥ ${minScore})`;
+    }
+    
     const content = document.getElementById('eligible-players-content');
     content.innerHTML = players.map(player => `
         <div class="player-card">
@@ -200,7 +248,13 @@ function displayEligiblePlayers(players) {
     `).join('');
 }
 
-function displayIneligiblePlayers(players) {
+function displayIneligiblePlayers(players, minScore) {
+    // Update title with dynamic minimum score
+    const title = document.getElementById('ineligible-players-title');
+    if (title) {
+        title.textContent = `Ineligible Players (Score < ${minScore})`;
+    }
+    
     const section = document.getElementById('ineligible-section');
     const content = document.getElementById('ineligible-players-content');
     
@@ -329,35 +383,75 @@ function escapeRegExp(string) {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-// Add enter key support and name update listeners
-document.addEventListener('DOMContentLoaded', function() {
-    const inputs = document.querySelectorAll('input');
-    inputs.forEach(input => {
-        input.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                calculateDistribution();
-            }
-        });
+// Attach event listeners to player inputs
+function attachPlayerEventListeners() {
+    const numPlayers = parseInt(document.getElementById('num-players').value) || 4;
+    
+    // Add event listeners for all inputs (including new ones)
+    const allInputs = document.querySelectorAll('input');
+    allInputs.forEach(input => {
+        // Remove existing listeners to avoid duplicates
+        input.removeEventListener('keypress', handleEnterKey);
+        input.addEventListener('keypress', handleEnterKey);
     });
     
     // Add event listeners for player name inputs
-    for (let i = 1; i <= 4; i++) {
+    for (let i = 1; i <= numPlayers; i++) {
         const nameInput = document.getElementById(`player${i}-name`);
         if (nameInput) {
             // Store initial value
             nameInput.setAttribute('data-previous-value', nameInput.value);
             
-            // Add input event listener for real-time updates
-            nameInput.addEventListener('input', function() {
-                const newName = this.value.trim() || `Player ${i}`;
-                updatePlayerNameInResults(i, newName);
-            });
+            // Remove existing listeners to avoid duplicates
+            nameInput.removeEventListener('input', nameInput.inputHandler);
+            nameInput.removeEventListener('blur', nameInput.blurHandler);
             
-            // Update on blur to handle edge cases
-            nameInput.addEventListener('blur', function() {
+            // Create new handlers
+            nameInput.inputHandler = function() {
                 const newName = this.value.trim() || `Player ${i}`;
                 updatePlayerNameInResults(i, newName);
-            });
+            };
+            
+            nameInput.blurHandler = function() {
+                const newName = this.value.trim() || `Player ${i}`;
+                updatePlayerNameInResults(i, newName);
+            };
+            
+            // Add new listeners
+            nameInput.addEventListener('input', nameInput.inputHandler);
+            nameInput.addEventListener('blur', nameInput.blurHandler);
         }
     }
+}
+
+function handleEnterKey(e) {
+    if (e.key === 'Enter') {
+        calculateDistribution();
+    }
+}
+
+// Initialize the application
+document.addEventListener('DOMContentLoaded', function() {
+    // Generate initial player inputs
+    generatePlayerInputs();
+    
+    // Add event listener for number of players change
+    const numPlayersInput = document.getElementById('num-players');
+    if (numPlayersInput) {
+        numPlayersInput.addEventListener('change', function() {
+            const numPlayers = parseInt(this.value);
+            if (numPlayers >= 2 && numPlayers <= 10) {
+                generatePlayerInputs();
+            } else {
+                this.value = Math.max(2, Math.min(10, numPlayers || 4));
+                generatePlayerInputs();
+            }
+        });
+    }
+    
+    // Add enter key support for configuration inputs
+    const configInputs = document.querySelectorAll('#num-players, #prize-per-player, #min-score');
+    configInputs.forEach(input => {
+        input.addEventListener('keypress', handleEnterKey);
+    });
 });
