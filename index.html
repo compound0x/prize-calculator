@@ -1,0 +1,114 @@
+<!--
+/**
+ * Prize Distribution Calculator - Main HTML File
+ * 
+ * A web application for fairly distributing prizes based on player scores.
+ * Only players with scores >= 20 are eligible for prizes.
+ * 
+ * @author compound0x
+ * @version 1.0.0
+ * @created September 2025
+ */
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prize Distribution Calculator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏆 Prize Distribution Calculator</h1>
+            <p>Fairly distribute prizes based on player scores</p>
+        </header>
+
+        <div class="input-section">
+            <h2>Player Information</h2>
+            <div class="players-grid">
+                <div class="player-input">
+                    <label for="player1-name">Player 1 Name:</label>
+                    <input type="text" id="player1-name" placeholder="Enter name" value="Player A">
+                    
+                    <label for="player1-score">Score:</label>
+                    <input type="number" id="player1-score" placeholder="Enter score" min="0" value="87">
+                </div>
+                
+                <div class="player-input">
+                    <label for="player2-name">Player 2 Name:</label>
+                    <input type="text" id="player2-name" placeholder="Enter name" value="Player B">
+                    
+                    <label for="player2-score">Score:</label>
+                    <input type="number" id="player2-score" placeholder="Enter score" min="0" value="85">
+                </div>
+                
+                <div class="player-input">
+                    <label for="player3-name">Player 3 Name:</label>
+                    <input type="text" id="player3-name" placeholder="Enter name" value="Player C">
+                    
+                    <label for="player3-score">Score:</label>
+                    <input type="number" id="player3-score" placeholder="Enter score" min="0" value="78">
+                </div>
+                
+                <div class="player-input">
+                    <label for="player4-name">Player 4 Name:</label>
+                    <input type="text" id="player4-name" placeholder="Enter name" value="Player D">
+                    
+                    <label for="player4-score">Score:</label>
+                    <input type="number" id="player4-score" placeholder="Enter score" min="0" value="130">
+                </div>
+            </div>
+
+            <div class="prize-input">
+                <label for="prize-per-player">Prize per Player ($):</label>
+                <input type="number" id="prize-per-player" placeholder="Enter prize amount" min="0" step="0.01" value="1.25">
+            </div>
+
+            <button onclick="calculateDistribution()" class="calculate-btn">Calculate Fair Distribution</button>
+        </div>
+
+        <div class="results-section" id="results-section" style="display: none;">
+            <h2>Distribution Results</h2>
+            
+            <div class="summary">
+                <h3>Summary</h3>
+                <div id="summary-content"></div>
+            </div>
+
+            <div class="eligible-players">
+                <h3>Eligible Players (Score ≥ 20)</h3>
+                <div id="eligible-players-content"></div>
+            </div>
+
+            <div class="ineligible-players" id="ineligible-section" style="display: none;">
+                <h3>Ineligible Players (Score < 20)</h3>
+                <div id="ineligible-players-content"></div>
+            </div>
+
+            <div class="distribution-table">
+                <h3>Fair Distribution</h3>
+                <div id="distribution-content"></div>
+            </div>
+
+            <div class="transfers">
+                <h3>Required Transfers</h3>
+                <div id="transfers-content"></div>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <h3>How It Works</h3>
+            <ul>
+                <li>Only players with scores ≥ 20 are eligible for prizes</li>
+                <li>Prize is distributed proportionally based on individual scores</li>
+                <li>Higher scorers receive more, lower scorers receive less</li>
+                <li>The calculator shows exactly who should transfer money to whom</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
